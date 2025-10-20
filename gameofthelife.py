@@ -19,6 +19,7 @@ class GridWidget(QWidget):
         for el in range(self.size):
             row = [0] * self.size
             self.grid.append(row)
+        self.update()
 
     def randomize_glider(self):
         self.clear_grid()
