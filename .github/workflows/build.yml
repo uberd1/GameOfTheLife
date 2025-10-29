@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Вы можете указать свою версию
+          python-version: '3.11'
 
       # Шаг 3: Устанавливаем зависимости из файла requirements.txt.
       - name: Install dependencies
@@ -35,20 +35,18 @@ jobs:
       - name: Install Nuitka
         run: pip install nuitka
 
-      # Шаг 5: Компилируем скрипт с помощью Nuitka.
-      # Это самый главный и сложный шаг.
+      # Шаг 5: Компилируем скрипт с помощью Nuitka (ИСПРАВЛЕННАЯ КОМАНДА).
       - name: Compile with Nuitka
         run: |
           python -m nuitka `
             --standalone `
             --onefile `
             --windows-disable-console `
-            --include-qt-plugins=platforms,styles `
+            --enable-plugin=pyqt6 `
             --output-dir=build `
             gameofthelife.py
 
       # Шаг 6: Загружаем скомпилированный .exe как "артефакт".
-      # Это позволит вам скачать его прямо со страницы GitHub Actions.
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
