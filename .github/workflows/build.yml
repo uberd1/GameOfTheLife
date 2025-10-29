@@ -41,8 +41,9 @@ jobs:
           python -m nuitka `
             --standalone `
             --onefile `
-            --windows-disable-console `
+            --windows-console-mode=disable `
             --enable-plugin=pyqt6 `
+            --accept-all-questions `
             --output-dir=build `
             gameofthelife.py
 
