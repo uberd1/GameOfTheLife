@@ -1,0 +1,56 @@
+# Название нашего workflow, которое будет отображаться в GitHub Actions.
+name: Build GameOfLife EXE with Nuitka
+
+# Триггер: этот workflow будет запускаться автоматически при каждом
+# пуше (push) в ветку 'main'.
+on:
+  push:
+    branches: [ "main" ]
+
+# Задания (jobs), которые будет выполнять workflow. У нас одно задание - 'build'.
+jobs:
+  build:
+    # Указываем операционную систему для компиляции. Для .exe нужна Windows.
+    runs-on: windows-latest
+
+    # Шаги (steps), которые будут выполнены последовательно.
+    steps:
+      # Шаг 1: Скачиваем код из репозитория в рабочую среду.
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # Шаг 2: Устанавливаем Python нужной версии.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Вы можете указать свою версию
+
+      # Шаг 3: Устанавливаем зависимости из файла requirements.txt.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Шаг 4: Устанавливаем саму Nuitka.
+      - name: Install Nuitka
+        run: pip install nuitka
+
+      # Шаг 5: Компилируем скрипт с помощью Nuitka.
+      # Это самый главный и сложный шаг.
+      - name: Compile with Nuitka
+        run: |
+          python -m nuitka `
+            --standalone `
+            --onefile `
+            --windows-disable-console `
+            --include-qt-plugins=platforms,styles `
+            --output-dir=build `
+            gameofthelife.py
+
+      # Шаг 6: Загружаем скомпилированный .exe как "артефакт".
+      # Это позволит вам скачать его прямо со страницы GitHub Actions.
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameOfLife-Windows-EXE
+          path: build/gameofthelife.exe
