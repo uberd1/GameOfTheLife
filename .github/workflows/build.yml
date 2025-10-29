@@ -35,7 +35,7 @@ jobs:
       - name: Install Nuitka
         run: pip install nuitka
 
-      # Шаг 5: Компилируем скрипт с помощью Nuitka (ИСПРАВЛЕННАЯ КОМАНДА).
+      # Шаг 5: Компилируем скрипт с помощью Nuitka (ФИНАЛЬНАЯ ВЕРСИЯ КОМАНДЫ).
       - name: Compile with Nuitka
         run: |
           python -m nuitka `
@@ -43,7 +43,7 @@ jobs:
             --onefile `
             --windows-console-mode=disable `
             --enable-plugin=pyqt6 `
-            --accept-all-questions `
+            --assume-yes-for-downloads `
             --output-dir=build `
             gameofthelife.py
 
