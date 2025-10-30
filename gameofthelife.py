@@ -1,7 +1,7 @@
 import sys
 import random
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt6.QtGui import QPainter, QColor, QPen
+from PyQt6.QtGui import QPainter, QColor, QPen, QIcon
 from PyQt6.QtCore import QTimer, QRectF, Qt
 
 
@@ -229,7 +229,8 @@ class GridWidget(QWidget):
 class GameOfLifeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Infinite Game of Life")
+        self.setWindowIcon(QIcon("icon.ico"))
+        self.setWindowTitle("Game of Life")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)

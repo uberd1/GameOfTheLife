@@ -44,6 +44,8 @@ jobs:
             --windows-console-mode=disable `
             --enable-plugin=pyqt6 `
             --assume-yes-for-downloads `
+	    --include-data-file=icon.ico=icon.ico `
+            --windows-icon-from-ico=icon.ico `
             --output-dir=build `
             gameofthelife.py
 
