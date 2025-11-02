@@ -128,26 +128,7 @@ class GridWidget(QWidget):
                 self.live_cells.remove(self.cursor_pos)
             else:
                 self.live_cells.add(self.cursor_pos)
-        elif event.key() == Qt.Key.Key_End:
-            # Дебаг функция для проверки заполненности поля
 
-            # 1. Вычисляем, какие координаты сейчас видны на экране.
-            start_col = int(-self.offset_x / self.zoom)
-            end_col = int((-self.offset_x + self.width()) / self.zoom) + 1
-            start_row = int(-self.offset_y / self.zoom)
-            end_row = int((-self.offset_y + self.height()) / self.zoom) + 1
-
-            # 2. Очищаем поле от всех предыдущих клеток.
-            self.live_cells.clear()
-
-            # 3. Проходим по каждой видимой клетке и с 50% шансом "оживляем" ее.
-            for col in range(start_col, end_col):
-                for row in range(start_row, end_row):
-                    if random.choice([True, False]):
-                        self.live_cells.add((col, row))
-
-            # 4. Показаваем результат.
-            self.update()
         self.cursor_pos = (col, row)
         self.cursor_visible = True  # Делаем курсор видимым после любого действия.
         self.cursor_timer.start(500)  # Перезапускаем таймер мигания.
