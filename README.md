@@ -45,8 +45,4 @@
 
 **Чтобы скачать и запустить игру:**
 
-1.  Перейдите во вкладку **Actions** в верхней части этого репозитория.
-2.  В списке слева выберите workflow **"Build GameOfLife EXE with Nuitka"**.
-3.  Нажмите на самый верхний (последний) успешный запуск (с зеленой галочкой).
-4.  Внизу страницы, в разделе **"Artifacts"**, скачайте архив `GameOfLife-Windows-EXE`.
-5.  Распакуйте архив и запустите файл `gameofthelife.exe`.
+https://github.com/uberd1/GameOfTheLife/releases/tag/1.0.0
