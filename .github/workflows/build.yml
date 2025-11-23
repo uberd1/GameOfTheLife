@@ -16,14 +16,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Install Nuitka
-        run: pip install nuitka
+          pip install nuitka # Или добавьте nuitka в requirements.txt
 
       - name: Compile with Nuitka
         run: |
@@ -37,8 +36,11 @@ jobs:
             --output-dir=build `
             gameofthelife.py
 
+      - name: Archive build directory
+        run: Compress-Archive -Path build/gameofthelife.dist/* -DestinationPath GameOfLife-Windows.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GameOfLife-Windows-EXE
-          path: build/gameofthelife.exe
+          name: GameOfLife-Windows-ZIP
+          path: GameOfLife-Windows.zip
