@@ -1,12 +1,14 @@
 import sys
 import random
-from PyQt6.QtWidgets import QListWidget, QInputDialog,QTabWidget,QFileDialog,QMessageBox,QStyle, QLabel, QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
+from PyQt6.QtWidgets import QListWidget, QInputDialog, QTabWidget, QFileDialog, QMessageBox, QStyle, QLabel, \
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtGui import QPainter, QColor, QPen, QIcon, QAction, QPixmap
-from PyQt6.QtCore import pyqtSignal,QTimer, QRectF, Qt
+from PyQt6.QtCore import pyqtSignal, QTimer, QRectF, Qt
 import database
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 # --- Класс игрового поля ---
 # Отвечает за всю логику, отрисовку и обработку пользовательского ввода.
@@ -453,7 +455,7 @@ class GameOfLifeWindow(QMainWindow):
         self.timer = QTimer();
         self.timer.timeout.connect(self.grid_widget.update_grid)
 
-        #Главное меню игры
+        # Главное меню игры
         self._create_menu_bar()
 
     def _create_menu_bar(self):
@@ -480,7 +482,7 @@ class GameOfLifeWindow(QMainWindow):
         help_menu = menu_bar.addMenu("&Помощь")
         help_menu.addAction(help_action)
 
-        #Библиотекарь sqlite
+        # Библиотекарь sqlite
         library_action = QAction("Библиотека паттернов...", self)
         library_action.triggered.connect(self.show_pattern_library)
         file_menu.addAction(library_action)
@@ -570,6 +572,7 @@ class GameOfLifeWindow(QMainWindow):
     def load_pattern_from_db(self, cells):
         """Слот, который принимает клетки от окна библиотеки и загружает их."""
         self.grid_widget.set_live_cells(cells)
+
     def reset_and_center_glider(self):
         self.stop_game()
         self.grid_widget.clear_grid()
@@ -581,9 +584,11 @@ class GameOfLifeWindow(QMainWindow):
             self.grid_widget.live_cells.add((0 + dc, 0 + dr))
         self.grid_widget.update()
 
-    def start_game(self): self.timer.start(100)
+    def start_game(self):
+        self.timer.start(100)
 
-    def stop_game(self): self.timer.stop()
+    def stop_game(self):
+        self.timer.stop()
 
     def reset_glider(self):
         self.stop_game()
