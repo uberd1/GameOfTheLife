@@ -29,7 +29,6 @@ jobs:
         run: |
           python -m nuitka `
             --standalone `
-#            --onefile `
             --windows-console-mode=disable `
             --enable-plugin=pyqt6 `
             --assume-yes-for-downloads `
