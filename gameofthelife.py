@@ -1,8 +1,9 @@
 import sys
 import random
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt6.QtGui import QPainter, QColor, QPen, QIcon
-from PyQt6.QtCore import QTimer, QRectF, Qt
+from PyQt6.QtWidgets import QListWidget, QInputDialog,QTabWidget,QFileDialog,QMessageBox,QStyle, QLabel, QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
+from PyQt6.QtGui import QPainter, QColor, QPen, QIcon, QAction, QPixmap
+from PyQt6.QtCore import pyqtSignal,QTimer, QRectF, Qt
+import database
 
 
 # --- Класс игрового поля ---
@@ -45,7 +46,7 @@ class GridWidget(QWidget):
     def showEvent(self, event):
         """
         Этот метод вызывается один раз, когда виджет впервые отображается.
-        Используется для корректной инициализации смещения камеры в центр экрана.
+        Используется для коректной инициализации смещения камеры в центр экрана.
         """
         super().showEvent(event)
         if self.offset_x == 0 and self.offset_y == 0:
@@ -55,18 +56,6 @@ class GridWidget(QWidget):
     def clear_grid(self):
         """Полностью очищает поле от живых клеток."""
         self.live_cells.clear()
-        self.update()
-
-    def reset_and_center_glider(self):
-        """Сбрасывает вид и ставит глайдер в центре координат (0,0)."""
-        self.clear_grid()
-        self.zoom = 10.0
-        self.offset_x = self.width() / 2
-        self.offset_y = self.height() / 2
-
-        # Размещаем глайдер относительно мировой точки (0,0).
-        for dr, dc in self.glider_pattern:
-            self.live_cells.add((0 + dc, 0 + dr))
         self.update()
 
     def screen_to_world(self, pos):
@@ -183,6 +172,15 @@ class GridWidget(QWidget):
         self.offset_y = mouse_pos.y() - world_before_zoom_y * self.zoom
         self.update()
 
+    def get_live_cells(self):
+        """Возвращает множество всех живых клеток."""
+        return self.live_cells
+
+    def set_live_cells(self, cells):
+        """Устанавливает новое состояние живых клеток и перерисовывает поле."""
+        self.live_cells = cells
+        self.update()
+
     def paintEvent(self, event):
         """Главный метод отрисовки. Вызывается каждый раз при self.update()."""
         painter = QPainter(self)
@@ -224,11 +222,200 @@ class GridWidget(QWidget):
                     QRectF(col * self.zoom + self.offset_x, row * self.zoom + self.offset_y, self.zoom, self.zoom))
 
 
+class PatternLibraryWindow(QWidget):
+    # Сигнал, который будет отправляться, когда пользователь выберет паттерн
+    pattern_selected = pyqtSignal(set)
+
+    def __init__(self, current_cells):
+        super().__init__()
+        self.setWindowTitle("Библиотека паттернов")
+        self.setFixedSize(400, 500)
+        self.current_cells = current_cells
+
+        layout = QVBoxLayout(self)
+
+        # Список для отображения паттернов
+        self.pattern_list = QListWidget()
+        self.pattern_list.itemDoubleClicked.connect(self.load_selected_pattern)
+
+        # Кнопки управления
+        load_button = QPushButton("Загрузить выбранный")
+        load_button.clicked.connect(self.load_selected_pattern)
+
+        save_button = QPushButton("Сохранить текущий паттерн")
+        save_button.clicked.connect(self.save_current_pattern)
+
+        delete_button = QPushButton("Удалить выбранный")
+        delete_button.clicked.connect(self.delete_selected_pattern)
+
+        layout.addWidget(QLabel("Доступные паттерны:"))
+        layout.addWidget(self.pattern_list)
+        layout.addWidget(load_button)
+        layout.addWidget(save_button)
+        layout.addWidget(delete_button)
+
+        self.refresh_list()
+
+    def refresh_list(self):
+        """Обновляет список паттернов из базы данных."""
+        self.pattern_list.clear()
+        self.patterns_map = {}
+        patterns = database.get_patterns()
+        for pattern_id, name in patterns:
+            self.pattern_list.addItem(name)
+            self.patterns_map[name] = pattern_id
+
+    def load_selected_pattern(self):
+        """Загружает выбранный паттерн и отправляет его в главное окно."""
+        selected_item = self.pattern_list.currentItem()
+        if not selected_item:
+            return
+
+        pattern_id = self.patterns_map[selected_item.text()]
+        cells_str = database.get_pattern_cells(pattern_id)
+
+        new_cells = set()
+        if cells_str:
+            for part in cells_str.split(';'):
+                col, row = map(int, part.split(','))
+                new_cells.add((col, row))
+
+        # Отправляем сигнал с загруженными клетками
+        self.pattern_selected.emit(new_cells)
+        self.close()  # Закрываем окно после загрузки
+
+    def save_current_pattern(self):
+        """Запрашивает имя и сохраняет текущий паттерн в БД."""
+        name, ok = QInputDialog.getText(self, "Сохранить паттерн", "Введите имя паттерна:")
+        if ok and name:
+            success, message = database.add_pattern(name, self.current_cells)
+            QMessageBox.information(self, "Результат", message)
+            if success:
+                self.refresh_list()
+
+    def delete_selected_pattern(self):
+        """Удаляет выбранный паттерн из БД."""
+        selected_item = self.pattern_list.currentItem()
+        if not selected_item:
+            return
+
+        reply = QMessageBox.question(self, "Подтверждение",
+                                     f"Вы уверены, что хотите удалить паттерн '{selected_item.text()}'?")
+
+        if reply == QMessageBox.StandardButton.Yes:
+            pattern_id = self.patterns_map[selected_item.text()]
+            database.delete_pattern(pattern_id)
+            self.refresh_list()
+
+
+### --- Классс окна справки ---
+class HelpWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Справка")
+        self.setFixedSize(500, 400)
+
+        # Главный layout для окна
+        main_layout = QVBoxLayout(self)
+
+        # Создаем систему вкладок
+        self.tabs = QTabWidget()
+        main_layout.addWidget(self.tabs)
+
+        # Создаем и добавляем каждую вкладку
+        self._create_controls_tab()
+        self._create_rules_tab()
+        self._create_about_tab()
+
+    def _create_tab(self, content_widget):
+        """Вспомогательная функция для создания страницы вкладки."""
+        # Каждая вкладка - это отдельный виджет со своим layout
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.addWidget(content_widget)
+        return page
+
+    def _create_controls_tab(self):
+        """Создает вкладку с описанием управления."""
+        label = QLabel()
+        label.setTextFormat(Qt.TextFormat.RichText)
+        label.setWordWrap(True)
+
+        text = """
+        <h3>Управление</h3>
+        <ul>
+            <li><b>Левая кнопка мыши:</b> Переместить курсор в указанную точку.</li>
+            <li><b>Правая кнопка мыши (зажать и двигать):</b> Перемещение (панорамирование) вида.</li>
+            <li><b>Колесо мыши:</b> Масштабирование (зум).</li>
+            <li><b>Клавиши-стрелки:</b> Перемещение курсора на одну клетку.</li>
+            <li><b>Enter:</b> Создать или удалить живую клетку под курсором.</li>
+            <li><b>End:</b> (Отладка) Заполнить видимую область случайными клетками.</li>
+        </ul>
+        """
+        label.setText(text)
+
+        controls_tab = self._create_tab(label)
+        self.tabs.addTab(controls_tab, "Управление")
+
+    def _create_rules_tab(self):
+        """Создает вкладку с правилами игры."""
+        label = QLabel()
+        label.setTextFormat(Qt.TextFormat.RichText)
+        label.setWordWrap(True)
+
+        text = """
+        <h3>Правила игры «Жизнь»</h3>
+        <p>
+            Классический клеточный автомат, придуманный Джоном Конвеем.
+            Эволюция живых клеток подчиняется трем простым правилам, что порождает
+            сложное и непредсказуемое поведение системы.
+        </p>
+        <ol>
+            <li><b>Выживание:</b> Живая клетка, у которой есть 2 или 3 живых соседа, выживает в следующем поколении.</li>
+            <li><b>Смерть:</b> Живая клетка, у которой менее 2 (одиночество) или более 3 (перенаселение) живых соседей, умирает.</li>
+            <li><b>Рождение:</b> Мёртвая клетка, у которой ровно 3 живых соседа, становится живой в следующем поколении.</li>
+        </ol>
+        """
+        label.setText(text)
+
+        rules_tab = self._create_tab(label)
+        self.tabs.addTab(rules_tab, "Правила")
+
+    def _create_about_tab(self):
+        """Создает вкладку 'О программе' с иконкой и текстом."""
+        # Создаем виджет-контейнер для этой вкладки
+        about_page = QWidget()
+        layout = QVBoxLayout(about_page)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Центрируем все содержимое
+
+        # --- Добавляем иконку (использование картинок) ---
+        icon_label = QLabel()
+        # Загружаем иконку из файла icon.ico (убедитесь, что он есть в проекте)
+        pixmap = QPixmap("icon.ico")
+        # Масштабируем иконку до адекватного размера
+        icon_label.setPixmap(pixmap.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio))
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # --- Добавляем текст ---
+        text_label = QLabel()
+        text_label.setTextFormat(Qt.TextFormat.RichText)
+        text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        text_label.setText("<h3>Игра «Жизнь»</h3><p>Версия 1.0<br>Автор: uberd1</p>")
+
+        # Добавляем виджеты в layout
+        layout.addWidget(icon_label)
+        layout.addWidget(text_label)
+
+        self.tabs.addTab(about_page, "О программе")
+
+
 # --- Класс главного окна ---
 # Отвечает за создание окна, кнопок и компоновку элементов.
 class GameOfLifeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.help_win = None
+        self.library_win = None
         self.setWindowIcon(QIcon("icon.ico"))
         self.setWindowTitle("Game of Life")
         central_widget = QWidget()
@@ -262,21 +449,166 @@ class GameOfLifeWindow(QMainWindow):
         self.timer = QTimer();
         self.timer.timeout.connect(self.grid_widget.update_grid)
 
+        #Главное меню игры
+        self._create_menu_bar()
+
+    def _create_menu_bar(self):
+        """Создает и настраивает строку меню."""
+        menu_bar = self.menuBar()
+
+        # МЕНЮ "ФАЙЛ"
+        file_menu = menu_bar.addMenu("&Файл")
+
+        # Действие "Сохранить"
+        save_action = QAction("Сохранить паттерн...", self)
+        save_action.triggered.connect(self.save_pattern)
+        file_menu.addAction(save_action)
+
+        # Действие "Загрузить"
+        load_action = QAction("Загрузить паттерн...", self)
+        load_action.triggered.connect(self.load_pattern)
+        file_menu.addAction(load_action)
+
+        # МЕНЮ "ПОМОЩЬ"
+        help_icon = self.style().standardIcon(getattr(QStyle.StandardPixmap, "SP_MessageBoxQuestion"))
+        help_action = QAction(help_icon, "Справка", self)
+        help_action.triggered.connect(self.show_help_window)
+        help_menu = menu_bar.addMenu("&Помощь")
+        help_menu.addAction(help_action)
+
+        #Библиотекарь sqlite
+        library_action = QAction("Библиотека паттернов...", self)
+        library_action.triggered.connect(self.show_pattern_library)
+        file_menu.addAction(library_action)
+
+        file_menu.addSeparator()
+
+    def show_help_window(self):
+        """Создает и показывает окно справки."""
+        # Проверяем, не открыто ли уже окно
+        if self.help_win is None:
+            self.help_win = HelpWindow()
+
+        self.help_win.show()
+
+    def save_pattern(self):
+        """
+        Открывает диалог сохранения файла и записывает в него
+        координаты живых клеток.
+        """
+        self.stop_game()  # Останавливаем симуляцию перед сохранением
+
+        # Открываем стандартный диалог сохранения
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Сохранить паттерн",
+            "",  # Начальная директория (пусто = по умолчанию)
+            "Pattern Files (*.txt);;All Files (*)"  # Фильтры файлов
+        )
+
+        # Если пользователь выбрал файл (не нажал "Отмена")
+        if file_path:
+            try:
+                with open(file_path, 'w') as f:
+                    # Получаем клетки от виджета
+                    live_cells = self.grid_widget.get_live_cells()
+                    # Записываем каждую координату (col, row) в новую строку
+                    for col, row in live_cells:
+                        f.write(f"{col},{row}\n")
+            except Exception as e:
+                # Показываем сообщение об ошибке, если что-то пошло не так
+                QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить файл:\n{e}")
+
+    def load_pattern(self):
+        """
+        Открывает диалог загрузки файла и считывает из него
+        координаты живых клеток.
+        """
+        self.stop_game()  # Останавливаем симуляцию
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Загрузить паттерн",
+            "",
+            "Pattern Files (*.txt);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                new_live_cells = set()
+                with open(file_path, 'r') as f:
+                    for line in f:
+                        # Убираем лишние пробелы и пустые строки
+                        line = line.strip()
+                        if not line:
+                            continue
+                        # Разделяем строку "col,row" на две части
+                        parts = line.split(',')
+                        col = int(parts[0])
+                        row = int(parts[1])
+                        new_live_cells.add((col, row))
+
+                # Передаем новые клетки в виджет
+                self.grid_widget.set_live_cells(new_live_cells)
+            except Exception as e:
+                QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл:\n{e}")
+
+    def show_pattern_library(self):
+        """Открывает окно библиотеки паттернов."""
+        self.stop_game()
+        # Передаем текущие клетки, чтобы их можно было сохранить
+        current_cells = self.grid_widget.get_live_cells()
+        self.library_win = PatternLibraryWindow(current_cells)
+        # Подключаемся к сигналу, который вернет выбранный паттерн
+        self.library_win.pattern_selected.connect(self.load_pattern_from_db)
+        self.library_win.show()
+
+    def load_pattern_from_db(self, cells):
+        """Слот, который принимает клетки от окна библиотеки и загружает их."""
+        self.grid_widget.set_live_cells(cells)
+    def reset_and_center_glider(self):
+        self.stop_game()
+        self.grid_widget.clear_grid()
+        self.grid_widget.zoom = 10.0
+        self.grid_widget.offset_x = self.grid_widget.width() / 2
+        self.grid_widget.offset_y = self.grid_widget.height() / 2
+
+        for dr, dc in self.grid_widget.glider_pattern:
+            self.grid_widget.live_cells.add((0 + dc, 0 + dr))
+        self.grid_widget.update()
+
     def start_game(self): self.timer.start(100)
 
     def stop_game(self): self.timer.stop()
 
     def reset_glider(self):
         self.stop_game()
-        self.grid_widget.reset_and_center_glider()
+        self.reset_and_center_glider()
 
     def clear(self):
+        """
+        Останавливает игру и запрашивает у пользователя подтверждение
+        перед тем, как дать виджету команду на очистку.
+        """
         self.stop_game()
-        self.grid_widget.clear_grid()
+
+        # Создаем диалоговое окно с вопросом
+        reply = QMessageBox.question(
+            self,
+            'Подтверждение очистки',
+            'Вы уверены, что хотите очистить все поле?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        # Проверяем ответ и даем команду виджету
+        if reply == QMessageBox.StandardButton.Yes:
+            self.grid_widget.clear_grid()
 
 
 # --- Точка входа в приложение ---
 if __name__ == "__main__":
+    database.init_db()
     app = QApplication(sys.argv)
     window = GameOfLifeWindow()
     window.show()
