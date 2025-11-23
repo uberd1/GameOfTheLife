@@ -4,7 +4,9 @@ from PyQt6.QtWidgets import QListWidget, QInputDialog,QTabWidget,QFileDialog,QMe
 from PyQt6.QtGui import QPainter, QColor, QPen, QIcon, QAction, QPixmap
 from PyQt6.QtCore import pyqtSignal,QTimer, QRectF, Qt
 import database
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --- Класс игрового поля ---
 # Отвечает за всю логику, отрисовку и обработку пользовательского ввода.
@@ -390,8 +392,9 @@ class HelpWindow(QWidget):
 
         # --- Добавляем иконку (использование картинок) ---
         icon_label = QLabel()
-        # Загружаем иконку из файла icon.ico (убедитесь, что он есть в проекте)
-        pixmap = QPixmap("icon.ico")
+        # Загружаем иконку из файла icon.ico
+        icon_path = os.path.join(BASE_DIR, "icon.ico")
+        pixmap = QPixmap(icon_path)
         # Масштабируем иконку до адекватного размера
         icon_label.setPixmap(pixmap.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio))
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -416,7 +419,8 @@ class GameOfLifeWindow(QMainWindow):
         super().__init__()
         self.help_win = None
         self.library_win = None
-        self.setWindowIcon(QIcon("icon.ico"))
+        icon_path = os.path.join(BASE_DIR, "icon.ico")
+        self.setWindowIcon(QIcon(icon_path))
         self.setWindowTitle("Game of Life")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
