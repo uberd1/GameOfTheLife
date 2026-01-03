@@ -22,25 +22,22 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install nuitka # Или добавьте nuitka в requirements.txt
+          pip install nuitka zstandard 
 
       - name: Compile with Nuitka
         run: |
           python -m nuitka `
-            --standalone `
+            --onefile `
             --windows-console-mode=disable `
             --enable-plugin=pyqt6 `
             --assume-yes-for-downloads `
             --include-data-file=icon.ico=icon.ico `
             --windows-icon-from-ico=icon.ico `
-            --output-dir=build `
+            --output-dir=dist `
             gameofthelife.py
-
-      - name: Archive build directory
-        run: Compress-Archive -Path build/gameofthelife.dist/* -DestinationPath GameOfLife-Windows.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GameOfLife-Windows-ZIP
-          path: GameOfLife-Windows.zip
+          name: GameOfLife-Windows-EXE
+          path: dist/gameofthelife.exe
