@@ -62,4 +62,4 @@ The build is performed automatically via **GitHub Actions** upon every repositor
 
 **To download and run the game:**
 
-https://github.com/uberd1/GameOfTheLife/releases/tag/1.0.0
+https://github.com/uberd1/GameOfTheLife/releases
