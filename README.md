@@ -4,7 +4,7 @@
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/uberd1/GameOfTheLife?style=flat-square)
 ![GitHub last commit](https://img.shields.io/github/last-commit/uberd1/GameOfTheLife?style=flat-square&color=blue)
-![GitHub license](https://img.shields.io/github/license/uberd1/GameOfTheLife?style=flat-square)
+![PyQt6](https://img.shields.io/badge/PyQt-6-green?style=flat-square&logo=qt&logoColor=white)
 
 **Project for Yandex Lyceum**
 
