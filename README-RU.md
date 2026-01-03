@@ -60,4 +60,4 @@
 
 **Чтобы скачать и запустить игру:**
 
-https://github.com/uberd1/GameOfTheLife/releases/tag/1.0.0
+https://github.com/uberd1/GameOfTheLife/releases
