@@ -11,7 +11,7 @@
 
 This is a feature-rich implementation of Conway's Game of Life, built with Python using the PyQt6 framework. The project features an infinite grid, camera control, a cursor system, as well as capabilities for saving, loading, and managing patterns via the file system and a database.
 
-## 📸 Demo
+## 📹 Demo
 
 ![Simulation Demo](assets/demo.gif)
 *Visualization of the simulation process.*
