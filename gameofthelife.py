@@ -35,6 +35,7 @@ TRANSLATIONS = {
         'tab_controls': "Управление",
         'tab_rules': "Правила",
         'tab_about': "О программе",
+        'MSG_ERROR': "Ошибка",
         # Длинные тексты можно хранить так же
         'html_controls': """
             <h3>Управление</h3>
@@ -73,6 +74,7 @@ TRANSLATIONS = {
         'tab_controls': "Controls",
         'tab_rules': "Rules",
         'tab_about': "About",
+        'MSG_ERROR': "Error",
         'html_controls': """
             <h3>Controls</h3>
             <ul>
@@ -362,10 +364,9 @@ class PatternLibraryWindow(QWidget):
         save_button = QPushButton(TRANSLATIONS[self.lang]['btn_save_cur'])
         save_button.clicked.connect(self.save_current_pattern)
 
-        delete_button = QPushButton("Удалить выбранный")
+        delete_button = QPushButton(TRANSLATIONS[self.lang]['btn_del_sel'])
         delete_button.clicked.connect(self.delete_selected_pattern)
 
-        delete_button = QPushButton(TRANSLATIONS[self.lang]['btn_del_sel'])
         layout.addWidget(self.pattern_list)
         layout.addWidget(load_button)
         layout.addWidget(save_button)
@@ -476,7 +477,7 @@ class HelpWindow(QWidget):
         label.setText(text)
 
         rules_tab = self._create_tab(label)
-        self.tabs.addTab(rules_tab, "Правила")
+        self.tabs.addTab(rules_tab, TRANSLATIONS[self.lang]['tab_rules'])
 
     def _create_about_tab(self):
         """Создает вкладку 'О программе' с иконкой и текстом."""
@@ -505,7 +506,7 @@ class HelpWindow(QWidget):
         layout.addWidget(icon_label)
         layout.addWidget(text_label)
 
-        self.tabs.addTab(about_page, "О программе")
+        self.tabs.addTab(about_page, TRANSLATIONS[self.lang]['tab_about'])
 
 
 # --- Класс главного окна ---
@@ -619,7 +620,7 @@ class GameOfLifeWindow(QMainWindow):
                         f.write(f"{col},{row}\n")
             except Exception as e:
                 # Показываем сообщение об ошибке, если что-то пошло не так
-                QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить файл:\n{e}")
+                QMessageBox.critical(self, self.t['MSG_ERROR'], f"Не удалось сохранить файл:\n{e}")
 
     def load_pattern(self):
         """
@@ -630,7 +631,7 @@ class GameOfLifeWindow(QMainWindow):
 
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Загрузить паттерн",
+            self.t['act_load'],
             "",
             "Pattern Files (*.txt);;All Files (*)"
         )
@@ -653,7 +654,7 @@ class GameOfLifeWindow(QMainWindow):
                 # Передаем новые клетки в виджет
                 self.grid_widget.set_live_cells(new_live_cells)
             except Exception as e:
-                QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл:\n{e}")
+                QMessageBox.critical(self, self.t['MSG_ERROR'], f"Не удалось загрузить файл:\n{e}")
 
     def show_pattern_library(self):
         """Открывает окно библиотеки паттернов."""

@@ -31,7 +31,7 @@ This is a feature-rich implementation of Conway's Game of Life, built with Pytho
 - **Multi-window Interface:** Includes a separate "Help" window with tabs describing controls and rules.
 - **Automated Build:** The project is configured to automatically compile into a single `.exe` file for Windows via GitHub Actions.
 
-## Controls
+## ⌨️ Controls
 
 ### Mouse
 | Action | Button | Description |
@@ -54,12 +54,12 @@ This is a feature-rich implementation of Conway's Game of Life, built with Pytho
 - **Help:**
     - `Help`: Opens a window with descriptions of controls, rules, and program info.
 
-## Automated Build & Download
+## 🦑 Automated Build & Download
 ---
 This project is distributed as a ready-to-run `.exe` file for Windows that requires no installation.
 
 The build is performed automatically via **GitHub Actions** upon every repository update.
 
-**To download and run the game:**
+** 🎏 Downloads:**
 
 https://github.com/uberd1/GameOfTheLife/releases
